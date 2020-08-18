@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Experimental.UIElements;
 
 public class PlayerController : MonoBehaviour
 {
@@ -9,7 +10,8 @@ public class PlayerController : MonoBehaviour
     public bool doubleJumpEnabled = false;
     public float crouchSpeed = 7f;                      //player cannot dash while crouching
     public float jumpVelocity = 25f;
-    private float slopeDistance = 1f;
+    private float slopeDistance = 0.7f;
+    public Transform ceilingCheckFlat;
 
     private Rigidbody2D my_rigidbody;
     private BoxCollider2D boxCollider;
@@ -21,9 +23,13 @@ public class PlayerController : MonoBehaviour
     private bool isJumping = false;
     private bool canJump;
     private bool isDashing;
+    private bool isCrouching = false;
+    private bool wasCrouching = false;
+    private bool isCtrlPressed = false;
 
     private int xInput;
     private int facingDir = 1;
+
 
     //sloep check variables
     private Vector2 slopeNormalPrep;
@@ -42,12 +48,14 @@ public class PlayerController : MonoBehaviour
         my_rigidbody = GetComponent<Rigidbody2D>();
         boxCollider = GetComponent<BoxCollider2D>();
         circleCollider = GetComponent<CircleCollider2D>();
+
     }
 
     private void FixedUpdate()
     {
         my_rigidbody.constraints = RigidbodyConstraints2D.FreezeRotation;
         isGrounded = GroundCheck();
+        CeilingCheck();
         SlopeCheck();
         Move();
     }
@@ -57,6 +65,11 @@ public class PlayerController : MonoBehaviour
         checkInput();
         isGrounded = GroundCheck();
         SlopeCheck();
+
+        if (isCrouching)
+            boxCollider.enabled = false;
+        else
+            boxCollider.enabled = true;
         //Debug.Log(xInput + " " + slopeNormalPrep.x);
         //Debug.Log("V: " + my_rigidbody.velocity);
     }
@@ -86,7 +99,39 @@ public class PlayerController : MonoBehaviour
             isDashing = true;
         else
             isDashing = false;
+
+        if (Input.GetKey(KeyCode.LeftControl))
+            isCtrlPressed = true;
+        else
+            isCtrlPressed = false;
+
     }
+
+    void  CeilingCheck()
+    {
+        float extraHeight = 0.1f;
+        Vector2 checkPos = ceilingCheckFlat.position;
+        RaycastHit2D ceilingHit = Physics2D.Raycast(checkPos, Vector2.up, extraHeight, platformLayerMask);
+        Debug.DrawRay(checkPos, Vector2.up * extraHeight, Color.red);
+        
+        if (ceilingHit.collider != null)
+            Debug.Log("Hit Ceiling");
+
+        if (isCtrlPressed)
+            isCrouching = true;
+        else if (ceilingHit.collider != null)
+            isCrouching = true;
+        else if (!isCtrlPressed && ceilingHit.collider == null)
+            isCrouching = false;
+
+
+        if (isCrouching)
+            boxCollider.enabled = false;
+        else
+            boxCollider.enabled = true;
+
+    }
+
 
     private void Jump()
     {
@@ -115,6 +160,11 @@ public class PlayerController : MonoBehaviour
                 Vector2 velocity = new Vector2(xInput * dashSpeed, 0.0f);
                 my_rigidbody.velocity = velocity;
             }
+            else if (isCrouching)
+            {
+                Vector2 velocity = new Vector2(xInput * crouchSpeed, 0.0f);
+                my_rigidbody.velocity = velocity;
+            }
             else
             {
                 Vector2 velocity = new Vector2(xInput * walkSpeed, 0.0f);
@@ -129,6 +179,11 @@ public class PlayerController : MonoBehaviour
             if (isDashing)
             {
                 Vector2 velocity = new Vector2(-xInput * dashSpeed * slopeNormalPrep.x, -xInput * dashSpeed * slopeNormalPrep.y);
+                my_rigidbody.velocity = velocity;
+            }
+            else if (isCrouching)
+            {
+                Vector2 velocity = new Vector2(xInput * crouchSpeed, 0.0f);
                 my_rigidbody.velocity = velocity;
             }
             else
@@ -146,7 +201,7 @@ public class PlayerController : MonoBehaviour
             {
                 Vector2 velocity = new Vector2(0, 0);
                 my_rigidbody.velocity = velocity;
-                Debug.Log("Set UnMove");
+                Debug.Log("Unmoveable Slope");
             }
             else
             {
