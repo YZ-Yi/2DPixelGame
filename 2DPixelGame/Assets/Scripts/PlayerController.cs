@@ -45,7 +45,6 @@ public class PlayerController : MonoBehaviour
     private void FixedUpdate()
     {
         my_rigidbody.constraints = RigidbodyConstraints2D.FreezeRotation;
-        calculateRealSpeed();
         Move();
     }
 
@@ -185,19 +184,5 @@ public class PlayerController : MonoBehaviour
    
     }
 
-    private void calculateRealSpeed()
-    {
-        
-        if (isOnSlope)
-        {
-            Debug.Log("normal: " + slopeNormalPrep);
-            //Debug.Log(slopeDownAngle);
-            slideVelocity.Set(slopeNormalPrep.x * slideSpeed, slopeNormalPrep.y * slideSpeed);
-        }
-        else
-            slideVelocity.Set(0, 0);
-
-        Debug.Log("Slide speed: " + slideVelocity);
-
-    }
+    
 }
