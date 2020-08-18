@@ -42,11 +42,15 @@ public class PlayerController : MonoBehaviour
     {
         //if player isn't touched ceiling and still on the ground
 
-        if (Input.GetKeyDown(KeyCode.Space) && my_grounded)
+        if (my_grounded)
         {
-            Debug.Log("Player is on the ground");
-            my_rigidbody.velocity = Vector2.up * jumpVelocity;
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                Debug.Log("Player is on the ground");
+                my_rigidbody.velocity = Vector2.up * jumpVelocity;
+            }
         }
+       
 
 
     }
@@ -62,6 +66,10 @@ public class PlayerController : MonoBehaviour
             transform.position += new Vector3(1, 0) * walkSpeed * Time.deltaTime;
         else if (Input.GetKey(KeyCode.A))
             transform.position -= new Vector3(1, 0) * walkSpeed * Time.deltaTime;
+        else
+        {
+            my_rigidbody.velocity = new Vector3(0, my_rigidbody.velocity.y);
+        }
     }
 
     private bool isGrounded()
@@ -91,4 +99,6 @@ public class PlayerController : MonoBehaviour
 
         return ceilingHit.collider != null;
     }
+
+  
 }
