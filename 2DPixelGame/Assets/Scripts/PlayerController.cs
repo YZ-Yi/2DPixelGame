@@ -11,8 +11,6 @@ public class PlayerController : MonoBehaviour
     public float crouchSpeed = 7f;                      //player cannot dash while crouching
     public float jumpVelocity = 25f;
     private float slopeDistance = 1f;
-    private Vector2 realWalkVelocity;
-    private Vector2 realDashVelocity;
     private Vector2 slideVelocity;
     
     private Rigidbody2D my_rigidbody;
