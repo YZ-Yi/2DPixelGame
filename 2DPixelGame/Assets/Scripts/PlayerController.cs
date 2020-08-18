@@ -4,13 +4,18 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    private float walkSpeed = 10f;
-    private float dashSpeed = 20f;
+    public float walkSpeed = 10f;
+    public float dashSpeed = 20f;
+    public bool doubleJumpEnabled = false;
+    public float crouchSpeed = 7f;                      //player cannot dash while crouching
+    public float jumpVelocity = 0.00001f;
 
     private Rigidbody2D my_rigidbody;
     private bool my_grounded;
+    private bool my_ceilinged;
     private BoxCollider2D boxCollider;
     private CircleCollider2D circleCollider;
+    [SerializeField] private LayerMask platformLayerMask;
 
     private void Awake()
     {
@@ -28,10 +33,21 @@ public class PlayerController : MonoBehaviour
     private void Update()
     {
         my_grounded = isGrounded();
+        my_ceilinged = isCeilinged();
+
+        Jump();
     }
 
     private void Jump()
     {
+        //if player isn't touched ceiling and still on the ground
+
+        if (Input.GetKeyDown(KeyCode.Space) && my_grounded)
+        {
+            Debug.Log("Player is on the ground");
+            my_rigidbody.velocity = Vector2.up * jumpVelocity;
+        }
+
 
     }
     private void Move()
@@ -51,7 +67,7 @@ public class PlayerController : MonoBehaviour
     private bool isGrounded()
     {
         float extraHeight = 0.1f;
-        RaycastHit2D groundHit  = Physics2D.Raycast(circleCollider.bounds.center, Vector2.down, circleCollider.bounds.extents.y + extraHeight);
+        RaycastHit2D groundHit  = Physics2D.Raycast(circleCollider.bounds.center, Vector2.down, circleCollider.bounds.extents.y + extraHeight, platformLayerMask);
         Color rayColor = Color.red;
 
         if (groundHit.collider != null)
@@ -60,7 +76,19 @@ public class PlayerController : MonoBehaviour
         if (groundHit.collider != null)
             Debug.Log("Hit ground");
 
-
         return groundHit.collider != null;
+    }
+
+    private bool isCeilinged()
+    {
+        float extraHeight = 0.1f;
+        RaycastHit2D ceilingHit = Physics2D.Raycast(boxCollider.bounds.center, Vector2.up, boxCollider.bounds.extents.y + extraHeight, platformLayerMask);
+        Color rayColor = Color.red;
+
+        if (ceilingHit.collider != null)
+            rayColor = Color.green;
+        Debug.DrawRay(boxCollider.bounds.center, Vector2.up * (boxCollider.bounds.extents.y + extraHeight));
+
+        return ceilingHit.collider != null;
     }
 }
