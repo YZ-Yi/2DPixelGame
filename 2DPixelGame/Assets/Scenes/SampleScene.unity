@@ -384,7 +384,7 @@ MonoBehaviour:
   platformLayerMask:
     serializedVersion: 2
     m_Bits: 256
-  maxSlopeAngle: 60
+  maxSlopeAngle: 45
   fullFriction: {fileID: 6200000, guid: 398c32fd10ef47f43bc4b8e1f3b5e127, type: 2}
   nonFriction: {fileID: 6200000, guid: a8027437ea7176448937ae8c8d54e519, type: 2}
 --- !u!1 &519420028

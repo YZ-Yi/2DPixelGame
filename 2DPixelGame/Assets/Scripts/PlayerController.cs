@@ -20,6 +20,10 @@ public class PlayerController : MonoBehaviour
     private bool isMoveable = true;
     private bool isJumping = false;
     private bool canJump;
+    private bool isDashing;
+
+    private int xInput;
+    private int facingDir = 1;
 
     //sloep check variables
     private Vector2 slopeNormalPrep;
@@ -28,10 +32,10 @@ public class PlayerController : MonoBehaviour
     private float slopeDownAngleOld;
 
 
-    [SerializeField] private LayerMask platformLayerMask;
-    [SerializeField] private float maxSlopeAngle;
-    [SerializeField] private PhysicsMaterial2D fullFriction;
-    [SerializeField] private PhysicsMaterial2D nonFriction;
+    [SerializeField] public LayerMask platformLayerMask;
+    [SerializeField] public float maxSlopeAngle;
+    [SerializeField] public PhysicsMaterial2D fullFriction;
+    [SerializeField] public PhysicsMaterial2D nonFriction;
 
     private void Awake()
     {
@@ -43,15 +47,45 @@ public class PlayerController : MonoBehaviour
     private void FixedUpdate()
     {
         my_rigidbody.constraints = RigidbodyConstraints2D.FreezeRotation;
+        isGrounded = GroundCheck();
+        SlopeCheck();
         Move();
     }
 
     private void Update()
     {
+        checkInput();
         isGrounded = GroundCheck();
-
         SlopeCheck();
-        Jump();
+        //Debug.Log(xInput + " " + slopeNormalPrep.x);
+        //Debug.Log("V: " + my_rigidbody.velocity);
+    }
+
+    void checkInput()
+    {
+        if (Input.GetKey(KeyCode.A))
+            xInput = -1;
+        else if (Input.GetKey(KeyCode.D))
+            xInput = 1;
+        else
+            xInput = 0;
+
+        if (xInput == 1 && facingDir == -1)
+        {
+            Flip();
+        }
+        else if (xInput == -1 && facingDir == 1)
+        {
+            Flip();
+        }
+
+        if (Input.GetKeyDown(KeyCode.Space))
+            Jump();
+
+        if (Input.GetKey(KeyCode.LeftShift))
+            isDashing = true;
+        else
+            isDashing = false;
     }
 
     private void Jump()
@@ -74,42 +108,65 @@ public class PlayerController : MonoBehaviour
     private void Move()
     {
 
-        if (!isOnSlope && isGrounded && !isJumping)
+        if (isGrounded && !isOnSlope && !isJumping)
         {
-            if (Input.GetKey(KeyCode.D) && Input.GetKey(KeyCode.LeftShift))
-                my_rigidbody.velocity = new Vector2(dashSpeed, 0);
-            else if (Input.GetKey(KeyCode.D))
-                my_rigidbody.velocity = new Vector2(walkSpeed, 0);
-            else if (Input.GetKey(KeyCode.A))
-                my_rigidbody.velocity = new Vector2(walkSpeed * -1, 0);
+            if (isDashing)
+            {
+                Vector2 velocity = new Vector2(xInput * dashSpeed, 0.0f);
+                my_rigidbody.velocity = velocity;
+            }
             else
-                my_rigidbody.velocity = new Vector2(0, 0);
+            {
+                Vector2 velocity = new Vector2(xInput * walkSpeed, 0.0f);
+                my_rigidbody.velocity = velocity;
+
+            }
+            Debug.Log("On the flat ground");
+
         }
         else if (isOnSlope && isGrounded && !isJumping && isMoveable)
         {
-            if (Input.GetKey(KeyCode.D) && Input.GetKey(KeyCode.LeftShift))
-                my_rigidbody.velocity.Set(dashSpeed * slopeNormalPrep.x * -1, dashSpeed * slopeNormalPrep.y * -1);
-            else if (Input.GetKey(KeyCode.D))
-                my_rigidbody.velocity.Set(walkSpeed * slopeNormalPrep.x * -1, dashSpeed * slopeNormalPrep.y * -1);
-            else if (Input.GetKey(KeyCode.A))
-                my_rigidbody.velocity.Set(walkSpeed * slopeNormalPrep.x, dashSpeed * slopeNormalPrep.y * -1);
+            if (isDashing)
+            {
+                Vector2 velocity = new Vector2(-xInput * dashSpeed * slopeNormalPrep.x, -xInput * dashSpeed * slopeNormalPrep.y);
+                my_rigidbody.velocity = velocity;
+            }
+            else
+            {
+                Vector2 velocity = new Vector2(-xInput * walkSpeed * slopeNormalPrep.x, -xInput * walkSpeed * slopeNormalPrep.y);
+                my_rigidbody.velocity = velocity;
+            }
+            Debug.Log("Moveable slope");
 
         }
+        
         else if (!isGrounded)
         {
-            if (Input.GetKey(KeyCode.D) && Input.GetKey(KeyCode.LeftShift))
-                my_rigidbody.velocity = new Vector2(dashSpeed, my_rigidbody.velocity.y);
-            else if (Input.GetKey(KeyCode.D))
-                my_rigidbody.velocity = new Vector2(walkSpeed, my_rigidbody.velocity.y);
-            else if (Input.GetKey(KeyCode.A))
-                my_rigidbody.velocity = new Vector2(walkSpeed * -1, my_rigidbody.velocity.y);
+            if (!isMoveable && xInput * my_rigidbody.velocity.x > 0)//trying to move on unmoveable slope
+            {
+                Vector2 velocity = new Vector2(0, 0);
+                my_rigidbody.velocity = velocity;
+                Debug.Log("Set UnMove");
+            }
             else
-                my_rigidbody.velocity = new Vector2(0, my_rigidbody.velocity.y);
+            {
+                if (isDashing)
+                {
+                    Vector2 velocity = new Vector2(dashSpeed * xInput, my_rigidbody.velocity.y);
+                    my_rigidbody.velocity = velocity;
+                }
+                else
+                {
+                    Vector2 velocity = new Vector2(walkSpeed * xInput, my_rigidbody.velocity.y);
+                    my_rigidbody.velocity = velocity;
+                }
 
-            Debug.Log("In air");
+                Debug.Log("In air");
+            }
+            
         }
 
-        Debug.Log("speed: " + my_rigidbody.velocity);
+        //Debug.Log("speed: " + my_rigidbody.velocity);
     }
 
     private bool GroundCheck()
@@ -121,8 +178,8 @@ public class PlayerController : MonoBehaviour
         if (groundHit.collider != null)
             rayColor = Color.green;
         //Debug.DrawRay(circleCollider.bounds.center, Vector2.down * (circleCollider.bounds.extents.y + extraHeight), rayColor);
-        if (groundHit.collider != null)
-            Debug.Log("Hit ground");
+        //if (groundHit.collider != null)
+           // Debug.Log("Hit ground");
 
         if (my_rigidbody.velocity.y <= 0.0f)
         {
@@ -140,12 +197,12 @@ public class PlayerController : MonoBehaviour
     {
         //Vector2 checkPos = circleCollider.bounds.center - new Vector3(0.0f, circleCollider.bounds.size.y / 2 );
         Vector2 checkPos = circleCollider.bounds.center - new Vector3(0.0f, circleCollider.bounds.size.y / 2);
-        Debug.DrawLine(circleCollider.bounds.center, checkPos, Color.red);
+        //Debug.DrawLine(circleCollider.bounds.center, checkPos, Color.red);
 
         SlopeHorizontalCheck(checkPos);
         SlopeVerticalCheck(checkPos);
 
-        Debug.Log("Size" + circleCollider.bounds.size.y);
+        //Debug.Log("Size" + circleCollider.bounds.size.y);
     }
 
     private void SlopeHorizontalCheck(Vector2 checkPos)
@@ -192,7 +249,7 @@ public class PlayerController : MonoBehaviour
 
             slopeDownAngleOld = slopeDownAngle;
 
-            Debug.DrawRay(hit.point, slopeNormalPrep, Color.red);
+            Debug.DrawRay(hit.point, slopeNormalPrep, Color.yellow);
             Debug.DrawRay(hit.point, hit.normal, Color.blue);
         }
 
@@ -200,6 +257,7 @@ public class PlayerController : MonoBehaviour
             isMoveable = false;
         else
             isMoveable = true;
+        //Debug.Log("Current angle:" + slopeDownAngle + " " + slopeSideAngle);
 
         if (isOnSlope && isMoveable && !(Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.D)))
             my_rigidbody.sharedMaterial = fullFriction;
@@ -208,5 +266,10 @@ public class PlayerController : MonoBehaviour
     
     }
 
+    private void Flip()
+    {
+        facingDir *= -1;
+        transform.Rotate(0.0f, 180.0f, 0.0f);
+    }
 
 }
