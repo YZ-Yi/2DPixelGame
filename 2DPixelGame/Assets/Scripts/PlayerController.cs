@@ -6,11 +6,15 @@ public class PlayerController : MonoBehaviour
 {
     public float walkSpeed = 10f;
     public float dashSpeed = 20f;
+    public float slideSpeed = 40f;
     public bool doubleJumpEnabled = false;
     public float crouchSpeed = 7f;                      //player cannot dash while crouching
     public float jumpVelocity = 25f;
     private float slopeDistance = 1f;
-
+    private Vector2 realWalkVelocity;
+    private Vector2 realDashVelocity;
+    private Vector2 slideVelocity;
+    
     private Rigidbody2D my_rigidbody;
     private BoxCollider2D boxCollider;
     private CircleCollider2D circleCollider;
@@ -24,10 +28,12 @@ public class PlayerController : MonoBehaviour
     private float slopeDownAngle;
     private float slopeSideAngle;
     private float slopeDownAngleOld;
-    [SerializeField] private float maxSlopeAngle;
   
 
     [SerializeField] private LayerMask platformLayerMask;
+    [SerializeField] private float maxSlopeAngle;
+    [SerializeField] private PhysicsMaterial2D fullFriction;
+    [SerializeField] private PhysicsMaterial2D nonFriction;
 
     private void Awake()
     {
@@ -39,6 +45,7 @@ public class PlayerController : MonoBehaviour
     private void FixedUpdate()
     {
         my_rigidbody.constraints = RigidbodyConstraints2D.FreezeRotation;
+        calculateRealSpeed();
         Move();
     }
 
@@ -58,7 +65,6 @@ public class PlayerController : MonoBehaviour
         {
             if (Input.GetKeyDown(KeyCode.Space))
             {
-                Debug.Log("Player is on the ground");
                 my_rigidbody.velocity = Vector2.up * jumpVelocity;
             }
         }
@@ -68,18 +74,32 @@ public class PlayerController : MonoBehaviour
     }
     private void Move()
     {
-        //dash
-        if (Input.GetKey(KeyCode.D) && Input.GetKey(KeyCode.LeftShift) && isMoveable)
-            my_rigidbody.velocity = new Vector2(1 * dashSpeed, my_rigidbody.velocity.y);
-        else if (Input.GetKey(KeyCode.D) && isMoveable)
-            my_rigidbody.velocity = new Vector2(1 * walkSpeed, my_rigidbody.velocity.y);
-        else if (Input.GetKey(KeyCode.A) && isMoveable)
-            my_rigidbody.velocity = new Vector2(-1 * walkSpeed, my_rigidbody.velocity.y);
-
+        if (!isOnSlope)
+        {
+            if (Input.GetKey(KeyCode.D) && Input.GetKey(KeyCode.LeftShift))
+                my_rigidbody.velocity = new Vector2(dashSpeed , my_rigidbody.velocity.y + slideVelocity.y);
+            else if (Input.GetKey(KeyCode.D))
+                my_rigidbody.velocity = new Vector2(walkSpeed , my_rigidbody.velocity.y + slideVelocity.y);
+            else if (Input.GetKey(KeyCode.A))
+                my_rigidbody.velocity = new Vector3(walkSpeed * -1, my_rigidbody.velocity.y + slideVelocity.y);
+            else
+            {
+                my_rigidbody.velocity = new Vector3(0, my_rigidbody.velocity.y);
+            }
+        }
         else
         {
-            my_rigidbody.velocity = new Vector3(0, my_rigidbody.velocity.y);
+            if (Input.GetKey(KeyCode.D) && Input.GetKey(KeyCode.LeftShift))
+                my_rigidbody.velocity.Set(dashSpeed * slopeNormalPrep.x * -1, dashSpeed * slopeNormalPrep.y * -1);
+            else if (Input.GetKey(KeyCode.D))
+                my_rigidbody.velocity.Set(walkSpeed * slopeNormalPrep.x * -1, dashSpeed * slopeNormalPrep.y * -1);
+            else if (Input.GetKey(KeyCode.A))
+                my_rigidbody.velocity.Set(walkSpeed * slopeNormalPrep.x, dashSpeed * slopeNormalPrep.y * -1);
+
         }
+
+
+        Debug.Log("speed: " + my_rigidbody.velocity);
     }
 
     private bool GroundCheck()
@@ -91,8 +111,8 @@ public class PlayerController : MonoBehaviour
         if (groundHit.collider != null)
             rayColor = Color.green;
         //Debug.DrawRay(circleCollider.bounds.center, Vector2.down * (circleCollider.bounds.extents.y + extraHeight), rayColor);
-        if (groundHit.collider != null)
-            Debug.Log("Hit ground");
+       // if (groundHit.collider != null)
+            //Debug.Log("Hit ground");
 
         return groundHit.collider != null;
     }
@@ -113,6 +133,8 @@ public class PlayerController : MonoBehaviour
         RaycastHit2D slopeHitFront = Physics2D.Raycast(checkPos, transform.right, slopeDistance, platformLayerMask);
         RaycastHit2D slopeHitBack = Physics2D.Raycast(checkPos, -transform.right, slopeDistance, platformLayerMask);
 
+        Debug.DrawRay(checkPos, transform.right * slopeDistance, Color.blue);
+        Debug.DrawRay(checkPos, -transform.right * slopeDistance, Color.blue);
         if (slopeHitBack)
         {
             isOnSlope = true;
@@ -149,13 +171,33 @@ public class PlayerController : MonoBehaviour
 
             Debug.DrawRay(hit.point, slopeNormalPrep, Color.red);
             Debug.DrawRay(hit.point, hit.normal, Color.blue);
-            Debug.Log("slopeDownAngle");
-            Debug.Log(slopeDownAngle);
         }
 
         if (slopeDownAngle > maxSlopeAngle || slopeSideAngle > maxSlopeAngle)
             isMoveable = false;
         else
             isMoveable = true;
+
+        if (isOnSlope && !isMoveable)
+            my_rigidbody.sharedMaterial = nonFriction;
+        else if (isOnSlope && isMoveable)
+            my_rigidbody.sharedMaterial = fullFriction;
+   
+    }
+
+    private void calculateRealSpeed()
+    {
+        
+        if (isOnSlope)
+        {
+            Debug.Log("normal: " + slopeNormalPrep);
+            //Debug.Log(slopeDownAngle);
+            slideVelocity.Set(slopeNormalPrep.x * slideSpeed, slopeNormalPrep.y * slideSpeed);
+        }
+        else
+            slideVelocity.Set(0, 0);
+
+        Debug.Log("Slide speed: " + slideVelocity);
+
     }
 }
