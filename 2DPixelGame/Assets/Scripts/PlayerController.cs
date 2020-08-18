@@ -109,8 +109,6 @@ public class PlayerController : MonoBehaviour
             Debug.Log("In air");
         }
 
-
-
         Debug.Log("speed: " + my_rigidbody.velocity);
     }
 
@@ -147,7 +145,7 @@ public class PlayerController : MonoBehaviour
         SlopeHorizontalCheck(checkPos);
         SlopeVerticalCheck(checkPos);
 
-        Debug.Log("Down Angle: " + slopeDownAngle + " side angle: " + slopeSideAngle);
+        Debug.Log("Size" + circleCollider.bounds.size.y);
     }
 
     private void SlopeHorizontalCheck(Vector2 checkPos)
@@ -155,17 +153,20 @@ public class PlayerController : MonoBehaviour
         RaycastHit2D slopeHitFront = Physics2D.Raycast(checkPos, transform.right, slopeDistance, platformLayerMask);
         RaycastHit2D slopeHitBack = Physics2D.Raycast(checkPos, -transform.right, slopeDistance, platformLayerMask);
 
-        //Debug.DrawRay(checkPos, transform.right * slopeDistance, Color.blue);
-        //Debug.DrawRay(checkPos, -transform.right * slopeDistance, Color.blue);
+        Debug.DrawRay(checkPos, transform.right * slopeDistance, Color.blue);
+        Debug.DrawRay(checkPos, -transform.right * slopeDistance, Color.blue);
         if (slopeHitBack)
         {
             isOnSlope = true;
             slopeSideAngle = Vector2.Angle(slopeHitBack.normal, Vector2.up);
+            Debug.DrawRay(slopeHitBack.point, slopeHitBack.normal, Color.red);
         }
         else if (slopeHitFront)
         {
             isOnSlope = true;
             slopeSideAngle = Vector2.Angle(slopeHitFront.normal, Vector2.up);
+            Debug.DrawRay(slopeHitFront.point, slopeHitFront.normal, Color.red);
+
         }
         else
         {
@@ -191,8 +192,8 @@ public class PlayerController : MonoBehaviour
 
             slopeDownAngleOld = slopeDownAngle;
 
-            //Debug.DrawRay(hit.point, slopeNormalPrep, Color.red);
-            //Debug.DrawRay(hit.point, hit.normal, Color.blue);
+            Debug.DrawRay(hit.point, slopeNormalPrep, Color.red);
+            Debug.DrawRay(hit.point, hit.normal, Color.blue);
         }
 
         if (slopeDownAngle > maxSlopeAngle || slopeSideAngle > maxSlopeAngle)
