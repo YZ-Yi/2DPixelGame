@@ -10,7 +10,6 @@ public class PlayerController : MonoBehaviour
     public bool doubleJumpEnabled = false;
     public float crouchSpeed = 7f;                      //player cannot dash while crouching
     public float jumpVelocity = 25f;
-    private float slopeDistance = 0.7f;
     public Transform ceilingCheckFlat;
 
     private Rigidbody2D my_rigidbody;
@@ -18,30 +17,17 @@ public class PlayerController : MonoBehaviour
     private CircleCollider2D circleCollider;
 
     private bool isGrounded;
-    private bool isOnSlope = false;
-    private bool isMoveable = true;
     private bool isJumping = false;
     private bool canJump;
     private bool isDashing;
     private bool isCrouching = false;
-    private bool wasCrouching = false;
     private bool isCtrlPressed = false;
 
     private int xInput;
     private int facingDir = 1;
 
 
-    //sloep check variables
-    private Vector2 slopeNormalPrep;
-    private float slopeDownAngle;
-    private float slopeSideAngle;
-    private float slopeDownAngleOld;
-
-
     [SerializeField] public LayerMask platformLayerMask;
-    [SerializeField] public float maxSlopeAngle;
-    [SerializeField] public PhysicsMaterial2D fullFriction;
-    [SerializeField] public PhysicsMaterial2D nonFriction;
 
     private void Awake()
     {
@@ -56,7 +42,6 @@ public class PlayerController : MonoBehaviour
         my_rigidbody.constraints = RigidbodyConstraints2D.FreezeRotation;
         isGrounded = GroundCheck();
         CeilingCheck();
-        SlopeCheck();
         Move();
     }
 
@@ -64,7 +49,6 @@ public class PlayerController : MonoBehaviour
     {
         checkInput();
         isGrounded = GroundCheck();
-        SlopeCheck();
 
         if (isCrouching)
             boxCollider.enabled = false;
@@ -153,7 +137,7 @@ public class PlayerController : MonoBehaviour
     private void Move()
     {
 
-        if (isGrounded && !isOnSlope && !isJumping)
+        if (isGrounded && !isJumping)
         {
             if (isDashing)
             {
@@ -174,51 +158,20 @@ public class PlayerController : MonoBehaviour
             Debug.Log("On the flat ground");
 
         }
-        else if (isOnSlope && isGrounded && !isJumping && isMoveable)
+        else if (!isGrounded)
         {
             if (isDashing)
             {
-                Vector2 velocity = new Vector2(-xInput * dashSpeed * slopeNormalPrep.x, -xInput * dashSpeed * slopeNormalPrep.y);
-                my_rigidbody.velocity = velocity;
-            }
-            else if (isCrouching)
-            {
-                Vector2 velocity = new Vector2(xInput * crouchSpeed, 0.0f);
+                Vector2 velocity = new Vector2(dashSpeed * xInput, my_rigidbody.velocity.y);
                 my_rigidbody.velocity = velocity;
             }
             else
             {
-                Vector2 velocity = new Vector2(-xInput * walkSpeed * slopeNormalPrep.x, -xInput * walkSpeed * slopeNormalPrep.y);
+                Vector2 velocity = new Vector2(walkSpeed * xInput, my_rigidbody.velocity.y);
                 my_rigidbody.velocity = velocity;
             }
-            Debug.Log("Moveable slope");
 
-        }
-        
-        else if (!isGrounded)
-        {
-            if (!isMoveable && xInput * my_rigidbody.velocity.x > 0)//trying to move on unmoveable slope
-            {
-                Vector2 velocity = new Vector2(0, 0);
-                my_rigidbody.velocity = velocity;
-                Debug.Log("Unmoveable Slope");
-            }
-            else
-            {
-                if (isDashing)
-                {
-                    Vector2 velocity = new Vector2(dashSpeed * xInput, my_rigidbody.velocity.y);
-                    my_rigidbody.velocity = velocity;
-                }
-                else
-                {
-                    Vector2 velocity = new Vector2(walkSpeed * xInput, my_rigidbody.velocity.y);
-                    my_rigidbody.velocity = velocity;
-                }
-
-                Debug.Log("In air");
-            }
-            
+            Debug.Log("In air");
         }
 
         //Debug.Log("speed: " + my_rigidbody.velocity);
@@ -240,7 +193,7 @@ public class PlayerController : MonoBehaviour
         {
             isJumping = false;
         }
-        if (isGrounded && !isJumping && slopeDownAngle <= maxSlopeAngle)
+        if (isGrounded && !isJumping)
         {
             canJump = true;
         }
@@ -248,79 +201,9 @@ public class PlayerController : MonoBehaviour
         return groundHit.collider != null;
     }
 
-    private void SlopeCheck()
-    {
-        //Vector2 checkPos = circleCollider.bounds.center - new Vector3(0.0f, circleCollider.bounds.size.y / 2 );
-        Vector2 checkPos = circleCollider.bounds.center - new Vector3(0.0f, circleCollider.bounds.size.y / 2);
-        //Debug.DrawLine(circleCollider.bounds.center, checkPos, Color.red);
+   
 
-        SlopeHorizontalCheck(checkPos);
-        SlopeVerticalCheck(checkPos);
-
-        //Debug.Log("Size" + circleCollider.bounds.size.y);
-    }
-
-    private void SlopeHorizontalCheck(Vector2 checkPos)
-    {
-        RaycastHit2D slopeHitFront = Physics2D.Raycast(checkPos, transform.right, slopeDistance, platformLayerMask);
-        RaycastHit2D slopeHitBack = Physics2D.Raycast(checkPos, -transform.right, slopeDistance, platformLayerMask);
-
-        Debug.DrawRay(checkPos, transform.right * slopeDistance, Color.blue);
-        Debug.DrawRay(checkPos, -transform.right * slopeDistance, Color.blue);
-        if (slopeHitBack)
-        {
-            isOnSlope = true;
-            slopeSideAngle = Vector2.Angle(slopeHitBack.normal, Vector2.up);
-            Debug.DrawRay(slopeHitBack.point, slopeHitBack.normal, Color.red);
-        }
-        else if (slopeHitFront)
-        {
-            isOnSlope = true;
-            slopeSideAngle = Vector2.Angle(slopeHitFront.normal, Vector2.up);
-            Debug.DrawRay(slopeHitFront.point, slopeHitFront.normal, Color.red);
-
-        }
-        else
-        {
-            slopeSideAngle = 0.0f;
-            isOnSlope = false;
-        }
-    }
-
-    private void SlopeVerticalCheck(Vector2 checkPos)
-    {
-        RaycastHit2D hit = Physics2D.Raycast(checkPos, Vector2.down, slopeDistance, platformLayerMask);
-
-        if (hit)
-        {
-            slopeNormalPrep = Vector2.Perpendicular(hit.normal);
-            slopeDownAngle = Vector2.Angle(hit.normal, Vector2.up);
-
-            if (slopeDownAngle != slopeDownAngleOld)
-            {
-                isOnSlope = true;
-            }
-
-
-            slopeDownAngleOld = slopeDownAngle;
-
-            Debug.DrawRay(hit.point, slopeNormalPrep, Color.yellow);
-            Debug.DrawRay(hit.point, hit.normal, Color.blue);
-        }
-
-        if (slopeDownAngle > maxSlopeAngle || slopeSideAngle > maxSlopeAngle)
-            isMoveable = false;
-        else
-            isMoveable = true;
-        //Debug.Log("Current angle:" + slopeDownAngle + " " + slopeSideAngle);
-
-        if (isOnSlope && isMoveable && !(Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.D)))
-            my_rigidbody.sharedMaterial = fullFriction;
-        else
-            my_rigidbody.sharedMaterial = nonFriction;
-    
-    }
-
+  
     private void Flip()
     {
         facingDir *= -1;
