@@ -582,12 +582,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0c244c49bab1f694b8776722fca54639, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  walkSpeed: 10
-  dashSpeed: 20
+  walkSpeed: 7
+  dashSpeed: 15
   doubleJumpEnabled: 1
-  crouchSpeed: 5
+  crouchSpeed: 4
   jumpVelocity: 25
   ceilingCheckFlat: {fileID: 2006636682}
+  animator: {fileID: 388829474}
   platformLayerMask:
     serializedVersion: 2
     m_Bits: 256

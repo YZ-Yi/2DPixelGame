@@ -10,6 +10,7 @@ public class PlayerController : MonoBehaviour
     public float crouchSpeed = 7f;                      //player cannot dash while crouching
     public float jumpVelocity = 25f;
     public Transform ceilingCheckFlat;
+    public Animator animator;
 
     private Rigidbody2D my_rigidbody;
     private BoxCollider2D boxCollider;
@@ -49,7 +50,7 @@ public class PlayerController : MonoBehaviour
     {
         checkInput();
         isGrounded = GroundCheck();
-
+        animator.SetFloat("Speed", Mathf.Abs(my_rigidbody.velocity.x));
         if (isCrouching)
             boxCollider.enabled = false;
         else
