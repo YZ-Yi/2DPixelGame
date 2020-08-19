@@ -11,6 +11,7 @@ public class PlayerController : MonoBehaviour
     public float jumpVelocity = 25f;
     public Transform ceilingCheckFlat;
     public Animator animator;
+    public Transform respawnPoint;
 
     private Rigidbody2D my_rigidbody;
     private BoxCollider2D boxCollider;
@@ -205,9 +206,6 @@ public class PlayerController : MonoBehaviour
 
         return groundHit.collider != null;
     }
-
-   
-
   
     private void Flip()
     {
@@ -215,4 +213,13 @@ public class PlayerController : MonoBehaviour
         transform.Rotate(0.0f, 180.0f, 0.0f);
     }
 
+    private void OnTriggerEnter2D(Collider2D target)
+    {
+        if(target.tag == "FallDetector")
+        {
+            //take damage stuff
+
+            transform.position = respawnPoint.position;
+        }
+    }
 }
