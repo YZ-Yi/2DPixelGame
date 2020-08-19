@@ -22,6 +22,7 @@ public class PlayerController : MonoBehaviour
     private bool isDashing;
     private bool isCrouching = false;
     private bool isCtrlPressed = false;
+    private bool isFirstJump = false;
 
     private int xInput;
     private int facingDir = 1;
@@ -123,12 +124,13 @@ public class PlayerController : MonoBehaviour
 
         if (canJump)
         {
-            if (Input.GetKeyDown(KeyCode.Space))
-            {
-                my_rigidbody.velocity = Vector2.up * jumpVelocity;
-                isJumping = true;
-                canJump = false;
-            }
+            my_rigidbody.velocity = Vector2.up * jumpVelocity;
+            isJumping = true;
+
+            if (!isFirstJump)
+                isFirstJump = true;
+            else
+                isFirstJump = false;
         }
 
 
@@ -193,10 +195,13 @@ public class PlayerController : MonoBehaviour
         {
             isJumping = false;
         }
+
         if (isGrounded && !isJumping)
-        {
             canJump = true;
-        }
+        else if (!isGrounded && isFirstJump && doubleJumpEnabled)
+            canJump = true;
+        else
+            canJump = false;
 
         return groundHit.collider != null;
     }
