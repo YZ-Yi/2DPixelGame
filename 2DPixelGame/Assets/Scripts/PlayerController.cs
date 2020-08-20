@@ -13,6 +13,8 @@ public class PlayerController : MonoBehaviour
     public Animator animator;
     public Transform respawnPoint;
 
+    private LevelManger gameLevelManager;
+
     private Rigidbody2D my_rigidbody;
     private BoxCollider2D boxCollider;
     private CircleCollider2D circleCollider;
@@ -36,7 +38,7 @@ public class PlayerController : MonoBehaviour
         my_rigidbody = GetComponent<Rigidbody2D>();
         boxCollider = GetComponent<BoxCollider2D>();
         circleCollider = GetComponent<CircleCollider2D>();
-
+        gameLevelManager = FindObjectOfType<LevelManger>();
     }
 
     private void FixedUpdate()
@@ -217,9 +219,10 @@ public class PlayerController : MonoBehaviour
     {
         if(target.tag == "FallDetector")
         {
+            gameLevelManager.Respawn();
+
             //take damage stuff
 
-            transform.position = respawnPoint.position;
         }
     }
 }
