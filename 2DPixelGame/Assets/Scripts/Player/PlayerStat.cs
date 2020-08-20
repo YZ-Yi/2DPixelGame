@@ -30,5 +30,8 @@ public class PlayerStat : MonoBehaviour
         Debug.Log("Current Health: " + health);
     }
 
-    
+    public float GetHealth()
+    {
+        return health;
+    }
 }

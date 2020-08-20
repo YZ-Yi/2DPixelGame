@@ -181,6 +181,11 @@ public class PlayerController : MonoBehaviour
             //Debug.Log("In air");
         }
 
+        if (Input.GetKeyDown(KeyCode.Q))
+        {
+            playerStat.TakeDamage(5);
+        }
+
         //Debug.Log("speed: " + my_rigidbody.velocity);
     }
 
