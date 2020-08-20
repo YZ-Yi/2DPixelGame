@@ -59,6 +59,7 @@
   <ItemGroup>
     <Compile Include="Assets\Scripts\LevelManger.cs" />
     <Compile Include="Assets\Scripts\PlayerController.cs" />
+    <Compile Include="Assets\Scripts\PlayerStat.cs" />
     <Reference Include="Unity.Timeline.Editor">
       <HintPath>C:/Code/2DPixelGame/2DPixelGame/Library/ScriptAssemblies/Unity.Timeline.Editor.dll</HintPath>
     </Reference>

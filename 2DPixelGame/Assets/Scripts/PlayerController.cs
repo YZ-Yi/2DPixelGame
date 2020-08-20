@@ -18,6 +18,7 @@ public class PlayerController : MonoBehaviour
     private Rigidbody2D my_rigidbody;
     private BoxCollider2D boxCollider;
     private CircleCollider2D circleCollider;
+    private PlayerStat playerStat;
 
     private bool isGrounded;
     private bool isJumping = false;
@@ -38,7 +39,9 @@ public class PlayerController : MonoBehaviour
         my_rigidbody = GetComponent<Rigidbody2D>();
         boxCollider = GetComponent<BoxCollider2D>();
         circleCollider = GetComponent<CircleCollider2D>();
+
         gameLevelManager = FindObjectOfType<LevelManger>();
+        playerStat = FindObjectOfType<PlayerStat>();
     }
 
     private void FixedUpdate()
@@ -102,8 +105,7 @@ public class PlayerController : MonoBehaviour
         RaycastHit2D ceilingHit = Physics2D.Raycast(checkPos, Vector2.up, extraHeight, platformLayerMask);
         Debug.DrawRay(checkPos, Vector2.up * extraHeight, Color.red);
         
-        if (ceilingHit.collider != null)
-            Debug.Log("Hit Ceiling");
+      
 
         if (isCtrlPressed)
             isCrouching = true;
@@ -160,7 +162,7 @@ public class PlayerController : MonoBehaviour
                 my_rigidbody.velocity = velocity;
 
             }
-            Debug.Log("On the flat ground");
+            //Debug.Log("On the flat ground");
 
         }
         else if (!isGrounded)
@@ -176,7 +178,7 @@ public class PlayerController : MonoBehaviour
                 my_rigidbody.velocity = velocity;
             }
 
-            Debug.Log("In air");
+            //Debug.Log("In air");
         }
 
         //Debug.Log("speed: " + my_rigidbody.velocity);
@@ -219,10 +221,10 @@ public class PlayerController : MonoBehaviour
     {
         if(target.tag == "FallDetector")
         {
+            float fallDamage = 45;
             gameLevelManager.Respawn();
 
-            //take damage stuff
-
+            playerStat.TakeDamage(fallDamage);
         }
     }
 }
