@@ -47,15 +47,15 @@ public class PlayerController : MonoBehaviour
     private void FixedUpdate()
     {
         my_rigidbody.constraints = RigidbodyConstraints2D.FreezeRotation;
-        isGrounded = GroundCheck();
         CeilingCheck();
+        GroundCheck();
+
         Move();
     }
 
     private void Update()
     {
         checkInput();
-        isGrounded = GroundCheck();
         animator.SetFloat("Speed", Mathf.Abs(my_rigidbody.velocity.x));
         if (isCrouching)
             boxCollider.enabled = false;
@@ -84,7 +84,10 @@ public class PlayerController : MonoBehaviour
         }
 
         if (Input.GetKeyDown(KeyCode.Space))
+        {
             Jump();
+            Debug.Log("Pressed Space");
+        }
 
         if (Input.GetKey(KeyCode.LeftShift))
             isDashing = true;
@@ -127,15 +130,20 @@ public class PlayerController : MonoBehaviour
     {
         //if player isn't touched ceiling and still on the ground
 
+      //  Debug.Log(canJump);
+
         if (canJump)
         {
             my_rigidbody.velocity = Vector2.up * jumpVelocity;
+            Debug.Log("Jumping" + my_rigidbody.velocity);
             isJumping = true;
 
             if (!isFirstJump)
                 isFirstJump = true;
             else
                 isFirstJump = false;
+
+            animator.SetBool("IsJumping", true);
         }
 
 
@@ -189,22 +197,33 @@ public class PlayerController : MonoBehaviour
         //Debug.Log("speed: " + my_rigidbody.velocity);
     }
 
-    private bool GroundCheck()
+    private void GroundCheck()
     {
         float extraHeight = 0.01f;
         RaycastHit2D groundHit = Physics2D.Raycast(circleCollider.bounds.center, Vector2.down, circleCollider.bounds.extents.y + extraHeight, platformLayerMask);
         Color rayColor = Color.red;
 
         if (groundHit.collider != null)
+        {
             rayColor = Color.green;
-        //Debug.DrawRay(circleCollider.bounds.center, Vector2.down * (circleCollider.bounds.extents.y + extraHeight), rayColor);
-        //if (groundHit.collider != null)
-           // Debug.Log("Hit ground");
+            isGrounded = true;
+            //isJumping = false;
 
-        if (my_rigidbody.velocity.y <= 0.0f)
+        }
+        else
+            isGrounded = false;
+        Debug.DrawRay(circleCollider.bounds.center, Vector2.down * (circleCollider.bounds.extents.y + extraHeight), rayColor);
+        //if (groundHit.collider != null)
+        // Debug.Log("Hit ground");
+
+        if (my_rigidbody.velocity.y <= 0f)
         {
             isJumping = false;
+
         }
+
+        if (my_rigidbody.velocity.y <= 0f && isGrounded)
+            animator.SetBool("IsJumping", false);
 
         if (isGrounded && !isJumping)
             canJump = true;
@@ -212,10 +231,10 @@ public class PlayerController : MonoBehaviour
             canJump = true;
         else
             canJump = false;
+       // Debug.Log("CanJump " + canJump);
 
-        return groundHit.collider != null;
     }
-  
+
     private void Flip()
     {
         facingDir *= -1;
