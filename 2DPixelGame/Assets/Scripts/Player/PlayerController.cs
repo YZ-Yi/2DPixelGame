@@ -141,7 +141,10 @@ public class PlayerController : MonoBehaviour
             if (!isFirstJump)
                 isFirstJump = true;
             else
+            {
                 isFirstJump = false;
+                animator.SetBool("IsDoubleJumping", true);
+            }
 
             animator.SetBool("IsJumping", true);
         }
@@ -223,7 +226,11 @@ public class PlayerController : MonoBehaviour
         }
 
         if (my_rigidbody.velocity.y <= 0f && isGrounded)
+        {
             animator.SetBool("IsJumping", false);
+            animator.SetBool("IsDoubleJumping", false);
+
+        }
 
         if (isGrounded && !isJumping)
             canJump = true;
